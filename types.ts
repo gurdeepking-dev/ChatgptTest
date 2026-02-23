@@ -101,3 +101,13 @@ export interface UserActivity {
 }
 
 export type ViewType = 'hot' | 'photo' | 'video' | 'aitools' | 'admin' | 'about' | 'contact' | 'terms' | 'privacy' | 'refund' | 'shipping';
+
+declare global {
+  interface Window {
+    aistudio: {
+      hasSelectedApiKey: () => Promise<boolean>;
+      openSelectKey: () => Promise<void>;
+    };
+    Razorpay: any;
+  }
+}

@@ -75,25 +75,6 @@ export const authService = {
     }
   },
 
-  async loginWithSocial(provider: 'google' | 'facebook' | 'apple'): Promise<void> {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: window.location.origin,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          }
-        }
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      logger.error('Auth', `Social login (${provider}) failed`, err);
-      throw err;
-    }
-  },
-
   async handleAuthChange(sessionUser: any): Promise<User | null> {
     if (!sessionUser) {
       localStorage.removeItem(AUTH_KEY);
@@ -103,7 +84,7 @@ export const authService = {
     const email = sessionUser.email!;
     let credits = await storageService.getUserCredits(email);
     
-    // Check if it's their first time login (social) to give bonus
+    // Check if it's their first time login to give bonus
     if (credits === 0) {
       await storageService.addCredits(email, 5);
       credits = 5;
