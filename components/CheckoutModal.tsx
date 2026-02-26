@@ -9,7 +9,7 @@ interface CheckoutModalProps {
   onClose: () => void;
   cart: CartItem[];
   onRemove: (id: string) => void;
-  onComplete: (paymentId: string, paidItemIds: string[]) => void;
+  onComplete: (paymentId: string, paidItemIds: string[], referralCode?: string) => void;
 }
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, cart, onRemove, onComplete }) => {
@@ -73,7 +73,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, cart, on
           if (buyBundle && settings) {
             await storageService.addCredits(email, settings.payment.creditBundleAmount);
           }
-          onComplete(res.razorpay_payment_id, cart.map(i => i.id));
+          const referral_code = localStorage.getItem('referral_code') || undefined;
+          onComplete(res.razorpay_payment_id, cart.map(i => i.id), referral_code);
         },
         prefill: { email },
         theme: { color: "#f43f5e" },

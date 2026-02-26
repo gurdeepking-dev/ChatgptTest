@@ -12,6 +12,7 @@ import Terms from './components/Terms';
 import Privacy from './components/Privacy';
 import Refund from './components/Refund';
 import Shipping from './components/Shipping';
+import AffiliateDashboard from './components/AffiliateDashboard';
 import LoginModal from './components/LoginModal';
 import { CartItem, ViewType, User } from './types';
 import { analytics } from './services/analytics';
@@ -31,6 +32,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     analytics.init();
+    
+    // Referral tracking
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) {
+      localStorage.setItem('referral_code', ref);
+      // Clean up URL
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, newUrl);
+    }
     
     // Initial user fetch
     const setupAuth = async () => {
@@ -103,6 +114,19 @@ const App: React.FC = () => {
           />
         );
       case 'aitools': return <AIToolsView />;
+      case 'affiliate': 
+        return user ? <AffiliateDashboard user={user} /> : <ValentineView 
+          cart={cart}
+          setCart={setCart}
+          user={user}
+          addToCart={addToCart}
+          showCheckout={showCheckoutModal}
+          setShowCheckout={setShowCheckoutModal}
+          removeFromCart={removeFromCart}
+          onLoginRequired={() => setShowLoginModal(true)}
+          onUserUpdate={(u) => setUser(u)}
+          onAnimate={handleAnimate}
+        />;
       case 'hot':
       default:
         return (
@@ -122,7 +146,7 @@ const App: React.FC = () => {
     }
   };
 
-  const isMainTab = ['hot', 'video', 'photo', 'aitools'].includes(currentView);
+  const isMainTab = ['hot', 'video', 'photo', 'aitools', 'affiliate'].includes(currentView);
 
   return (
     <div className="min-h-screen flex flex-col bg-rose-50/30">

@@ -13,6 +13,7 @@ import AdminTracking from './admin/AdminTracking';
 import AdminActivity from './admin/AdminActivity';
 import AdminSecurity from './admin/AdminSecurity';
 import AdminKeys from './admin/AdminKeys';
+import AdminAffiliates from './admin/AdminAffiliates';
 
 const AdminView: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(storageService.isAdminLoggedIn());
@@ -52,6 +53,7 @@ const AdminView: React.FC = () => {
     { id: 'tx', label: 'History', icon: '📜' },
     { id: 'coupons', label: 'Coupons', icon: '🏷️' },
     { id: 'payment', label: 'Pricing', icon: '💳' },
+    { id: 'affiliates', label: 'Partners', icon: '🤝' },
     { id: 'tracking', label: 'Pixel', icon: '📊' },
     { id: 'activities', label: 'Logs', icon: '🔍' },
     { id: 'security', label: 'Security', icon: '🔒' }
@@ -83,6 +85,7 @@ const AdminView: React.FC = () => {
         {activeTab === 'tx' && <AdminTransactions />}
         {activeTab === 'coupons' && <AdminCoupons />}
         {activeTab === 'payment' && <AdminPayment />}
+        {activeTab === 'affiliates' && <AdminAffiliates />}
         {activeTab === 'tracking' && <AdminTracking />}
         {activeTab === 'activities' && <AdminActivity />}
         {activeTab === 'security' && <AdminSecurity />}

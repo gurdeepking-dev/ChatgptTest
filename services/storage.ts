@@ -1,5 +1,5 @@
 
-import { StyleTemplate, AdminSettings, TransactionRecord, ApiKeyRecord, Coupon, SampleVideo } from '../types';
+import { StyleTemplate, AdminSettings, TransactionRecord, ApiKeyRecord, Coupon, SampleVideo, AffiliateRecord, CommissionRecord } from '../types';
 import { logger } from './logger';
 import { supabase } from './supabase';
 import { imageStorage } from './imageStorage';
@@ -195,8 +195,63 @@ export const storageService = {
       } else if (error) {
         throw error;
       }
+
+      // Handle Affiliate Commission
+      if (tx.referral_code) {
+        await this.recordCommission(tx.razorpay_payment_id, tx.amount, tx.referral_code);
+      }
     } catch (e) {
       logger.error('Storage', 'Transaction save failed', e);
+    }
+  },
+
+  async recordCommission(paymentId: string, totalAmount: number, referralCode: string): Promise<void> {
+    try {
+      const settings = await this.getAdminSettings();
+      if (!settings.affiliate?.enabled) return;
+
+      // 1. Find the affiliate
+      const { data: affiliate, error: affError } = await supabase
+        .from('affiliates')
+        .select('*')
+        .eq('referral_code', referralCode)
+        .single();
+      
+      if (affError || !affiliate) return;
+
+      // 2. Calculate commission
+      const percentage = settings.affiliate.defaultCommissionPercentage || 10;
+      const commissionAmount = (totalAmount * percentage) / 100;
+
+      // 3. Record the commission
+      const { error: commError } = await supabase.from('commissions').insert({
+        affiliate_id: affiliate.id,
+        transaction_id: paymentId,
+        amount: commissionAmount,
+        percentage: percentage,
+        status: 'pending'
+      });
+
+      if (commError) throw commError;
+
+      // 4. Update affiliate balance
+      const { error: updateError } = await supabase.rpc('increment_affiliate_balance', {
+        aff_id: affiliate.id,
+        amount_to_add: commissionAmount
+      });
+
+      if (updateError) {
+        // Fallback if RPC is not defined
+        await supabase
+          .from('affiliates')
+          .update({
+            balance: affiliate.balance + commissionAmount,
+            total_earned: affiliate.total_earned + commissionAmount
+          })
+          .eq('id', affiliate.id);
+      }
+    } catch (err) {
+      logger.error('Affiliate', 'Commission recording failed', err);
     }
   },
 
@@ -248,5 +303,49 @@ export const storageService = {
   getCurrencySymbol(currency: string = 'INR'): string {
     const symbols: Record<string, string> = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'INR': '₹' };
     return symbols[currency] || '₹';
+  },
+
+  async getAffiliateByUserId(userId: string): Promise<AffiliateRecord | null> {
+    try {
+      const { data, error } = await supabase
+        .from('affiliates')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      if (error) return null;
+      return data;
+    } catch (err) {
+      return null;
+    }
+  },
+
+  async registerAffiliate(userId: string, name: string, email: string): Promise<AffiliateRecord> {
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const { data, error } = await supabase
+      .from('affiliates')
+      .insert({
+        user_id: userId,
+        name,
+        email,
+        referral_code: referralCode,
+        balance: 0,
+        total_earned: 0
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async getAffiliateCommissions(affiliateId: string): Promise<CommissionRecord[]> {
+    const { data, error } = await supabase
+      .from('commissions')
+      .select('*')
+      .eq('affiliate_id', affiliateId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
   }
 };

@@ -128,13 +128,15 @@ const VideoView: React.FC<VideoViewProps> = ({ prefill, onClearPrefill }) => {
         description: `High Quality Video: ${duration}s`,
         handler: async (res: any) => {
           const paymentId = res.razorpay_payment_id;
+          const referral_code = localStorage.getItem('referral_code') || undefined;
           await storageService.saveTransaction({
             razorpay_payment_id: paymentId,
             user_email: email,
             amount: price,
             items: [`Cinema Video (${engine})`],
             status: 'authorized',
-            render_status: 'pending'
+            render_status: 'pending',
+            referral_code
           });
           startRender(paymentId, false, price);
         },

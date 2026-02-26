@@ -420,7 +420,17 @@ const ValentineView: React.FC<ValentineViewProps> = ({
       <CheckoutModal 
         isOpen={showCheckout} onClose={() => setShowCheckout(false)}
         cart={cart} onRemove={removeFromCart}
-        onComplete={async (paymentId, items) => {
+        onComplete={async (paymentId, items, referralCode) => {
+            // Save transaction
+            await storageService.saveTransaction({
+              razorpay_payment_id: paymentId,
+              user_email: user?.email || 'guest@example.com',
+              amount: cart.reduce((s, i) => s + i.price, 0),
+              items: items,
+              status: 'captured',
+              referral_code: referralCode
+            });
+
             // Logic handled in Modal to add credits
             const updatedCredits = await authService.refreshUserCredits();
             onUserUpdate(user ? { ...user, credits: updatedCredits } : null);

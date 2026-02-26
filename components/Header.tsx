@@ -141,6 +141,13 @@ const Header: React.FC<HeaderProps> = ({
                   <button onClick={() => handleNav('photo')} className={`w-full text-left px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${currentView === 'photo' ? 'bg-rose-50 text-rose-600' : 'text-slate-600 hover:bg-rose-50'}`}>🖼️ HD Enhancer</button>
                   <button onClick={() => handleNav('aitools')} className={`w-full text-left px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${currentView === 'aitools' ? 'bg-rose-50 text-rose-600' : 'text-slate-600 hover:bg-rose-50'}`}>🛠️ AI Toolbelt</button>
                   
+                  {user && (
+                    <>
+                      <div className="h-px bg-rose-50 mx-5 my-2" />
+                      <button onClick={() => handleNav('affiliate')} className={`w-full text-left px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${currentView === 'affiliate' ? 'bg-rose-50 text-rose-600' : 'text-slate-600 hover:bg-rose-50'}`}>🤝 Refer & Earn</button>
+                    </>
+                  )}
+                  
                   <div className="h-px bg-rose-50 mx-5 my-2" />
                   {user && (
                     <button onClick={() => { onLogout(); setIsMenuOpen(false); }} className="w-full text-left px-5 py-3 rounded-xl text-xs font-black text-rose-600 uppercase hover:bg-rose-50">Sign Out</button>

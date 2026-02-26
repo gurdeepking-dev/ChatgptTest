@@ -51,11 +51,38 @@ export interface TrackingConfig {
   metaPixelId?: string;
 }
 
+export interface AffiliateRecord {
+  id: string;
+  user_id?: string;
+  name: string;
+  referral_code: string;
+  email: string;
+  balance: number;
+  total_earned: number;
+  created_at?: string;
+}
+
+export interface CommissionRecord {
+  id: string;
+  affiliate_id: string;
+  transaction_id: string;
+  amount: number;
+  percentage: number;
+  status: 'pending' | 'paid';
+  created_at?: string;
+}
+
+export interface AffiliateConfig {
+  enabled: boolean;
+  defaultCommissionPercentage: number;
+}
+
 export interface AdminSettings {
   passwordHash: string;
   username: string;
   payment: PaymentConfig;
   tracking: TrackingConfig;
+  affiliate?: AffiliateConfig;
   geminiApiKey?: string;
   geminiApiKeys?: ApiKeyRecord[];
   coupons?: Coupon[];
@@ -89,6 +116,7 @@ export interface TransactionRecord {
   items: string[];
   status: 'authorized' | 'captured' | 'failed' | 'refund_requested' | 'refunded';
   render_status?: 'pending' | 'completed' | 'failed';
+  referral_code?: string;
   created_at?: string;
 }
 
@@ -100,7 +128,7 @@ export interface UserActivity {
   created_at?: string;
 }
 
-export type ViewType = 'hot' | 'photo' | 'video' | 'aitools' | 'admin' | 'about' | 'contact' | 'terms' | 'privacy' | 'refund' | 'shipping';
+export type ViewType = 'hot' | 'photo' | 'video' | 'aitools' | 'admin' | 'about' | 'contact' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'affiliate';
 
 declare global {
   interface Window {
