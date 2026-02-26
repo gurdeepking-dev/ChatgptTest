@@ -128,7 +128,7 @@ export interface UserActivity {
   created_at?: string;
 }
 
-export type ViewType = 'hot' | 'photo' | 'video' | 'aitools' | 'admin' | 'about' | 'contact' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'affiliate';
+export type ViewType = 'hot' | 'photo' | 'video' | 'aitools' | 'admin' | 'about' | 'contact' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'affiliate' | 'reset-password' | 'dashboard';
 
 declare global {
   interface Window {

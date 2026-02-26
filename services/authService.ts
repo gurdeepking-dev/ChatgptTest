@@ -55,7 +55,12 @@ export const authService = {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'Invalid login credentials') {
+          throw new Error("Incorrect email or password. Please try again or sign up if you don't have an account.");
+        }
+        throw error;
+      }
       if (!data.user) throw new Error("Login failed");
 
       const credits = await storageService.getUserCredits(email);
@@ -71,6 +76,18 @@ export const authService = {
       return user;
     } catch (err: any) {
       logger.error('Auth', 'Login failed', err);
+      throw err;
+    }
+  },
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      logger.error('Auth', 'Password reset failed', err);
       throw err;
     }
   },

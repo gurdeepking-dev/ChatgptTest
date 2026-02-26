@@ -71,6 +71,23 @@ const Header: React.FC<HeaderProps> = ({
 
         <nav className="flex items-center gap-3 sm:gap-6">
           {user ? (
+            <div className="hidden lg:flex items-center gap-4">
+              <button 
+                onClick={() => handleNav('dashboard')}
+                className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${currentView === 'dashboard' ? 'bg-slate-900 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-rose-50 border border-rose-100'}`}
+              >
+                My Dashboard
+              </button>
+              <button 
+                onClick={() => handleNav('affiliate')}
+                className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${currentView === 'affiliate' ? 'bg-rose-600 text-white shadow-lg' : 'bg-white text-rose-600 hover:bg-rose-50 border border-rose-100'}`}
+              >
+                🤝 Refer & Earn
+              </button>
+            </div>
+          ) : null}
+
+          {user ? (
             <div className="hidden sm:flex items-center gap-3 bg-rose-50 px-4 py-2 rounded-2xl border border-rose-100">
               <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">{user.credits} Credits</span>
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
@@ -144,6 +161,7 @@ const Header: React.FC<HeaderProps> = ({
                   {user && (
                     <>
                       <div className="h-px bg-rose-50 mx-5 my-2" />
+                      <button onClick={() => handleNav('dashboard')} className={`w-full text-left px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${currentView === 'dashboard' ? 'bg-rose-50 text-rose-600' : 'text-slate-600 hover:bg-rose-50'}`}>👤 My Dashboard</button>
                       <button onClick={() => handleNav('affiliate')} className={`w-full text-left px-5 py-3 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${currentView === 'affiliate' ? 'bg-rose-50 text-rose-600' : 'text-slate-600 hover:bg-rose-50'}`}>🤝 Refer & Earn</button>
                     </>
                   )}

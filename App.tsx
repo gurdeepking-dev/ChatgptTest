@@ -13,6 +13,8 @@ import Privacy from './components/Privacy';
 import Refund from './components/Refund';
 import Shipping from './components/Shipping';
 import AffiliateDashboard from './components/AffiliateDashboard';
+import UserDashboard from './components/UserDashboard';
+import ResetPasswordView from './components/ResetPasswordView';
 import LoginModal from './components/LoginModal';
 import { CartItem, ViewType, User } from './types';
 import { analytics } from './services/analytics';
@@ -63,6 +65,8 @@ const App: React.FC = () => {
         setUser(u);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+      } else if (event === 'PASSWORD_RECOVERY') {
+        setCurrentView('reset-password');
       }
     });
 
@@ -114,6 +118,19 @@ const App: React.FC = () => {
           />
         );
       case 'aitools': return <AIToolsView />;
+      case 'reset-password': return <ResetPasswordView />;
+      case 'dashboard': return user ? <UserDashboard user={user} /> : <ValentineView 
+          cart={cart}
+          setCart={setCart}
+          user={user}
+          addToCart={addToCart}
+          showCheckout={showCheckoutModal}
+          setShowCheckout={setShowCheckoutModal}
+          removeFromCart={removeFromCart}
+          onLoginRequired={() => setShowLoginModal(true)}
+          onUserUpdate={(u) => setUser(u)}
+          onAnimate={handleAnimate}
+        />;
       case 'affiliate': 
         return user ? <AffiliateDashboard user={user} /> : <ValentineView 
           cart={cart}
