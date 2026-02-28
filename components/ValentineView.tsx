@@ -45,6 +45,8 @@ const ValentineView: React.FC<ValentineViewProps> = ({
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [freePhotoClaimed, setFreePhotoClaimed] = useState(false);
   const [settings, setSettings] = useState<any>(null);
+  const [visibleCount, setVisibleCount] = useState(6);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   // New Prompt Bar & Custom Generation States
   const [globalPrompt, setGlobalPrompt] = useState('');
@@ -71,10 +73,13 @@ const ValentineView: React.FC<ValentineViewProps> = ({
         if (styleId === 'custom') {
           setCustomGenState(prev => ({ ...prev, isHighRes: true }));
         } else {
-          setGenStates(prev => ({
-            ...prev,
-            [styleId]: { ...prev[styleId], isHighRes: true }
-          }));
+          setGenStates(prev => {
+            if (!prev[styleId]) return prev;
+            return {
+              ...prev,
+              [styleId]: { ...prev[styleId], isHighRes: true }
+            };
+          });
         }
       });
     }
@@ -95,6 +100,7 @@ const ValentineView: React.FC<ValentineViewProps> = ({
         storageService.getStyles(),
         storageService.getAdminSettings()
       ]);
+      console.log('[ValentineView] loadedStyles:', loadedStyles.length);
       setStyles(loadedStyles);
       setSettings(adminSettings);
       
@@ -110,6 +116,23 @@ const ValentineView: React.FC<ValentineViewProps> = ({
       logger.error('View', 'Failed to load content', err);
     }
   };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < styles.length) {
+          setVisibleCount(prev => prev + 6);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [styles.length, visibleCount]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -313,11 +336,11 @@ const ValentineView: React.FC<ValentineViewProps> = ({
             <div className="h-1.5 w-20 bg-rose-500 rounded-full"></div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
-            {styles.map(s => (
+            {styles.slice(0, visibleCount).map(s => (
                 <ArtCard 
                   key={s.id}
                   style={s}
-                  state={genStates[s.id]}
+                  state={genStates[s.id] || { isLoading: false, result: null, error: null, refinement: '', isHighRes: false }}
                   onGenerate={handleGenerate}
                   onDownload={handleDownload}
                   onAnimate={onAnimate}
@@ -337,6 +360,12 @@ const ValentineView: React.FC<ValentineViewProps> = ({
               </div>
             )}
         </div>
+
+        {visibleCount < styles.length && (
+          <div ref={loaderRef} className="py-10 flex justify-center">
+            <div className="w-8 h-8 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin"></div>
+          </div>
+        )}
       </div>
     </div>
   );

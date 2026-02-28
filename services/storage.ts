@@ -51,44 +51,66 @@ export const storageService = {
   async getStyles(forceRefresh = false): Promise<StyleTemplate[]> {
     const cached = localStorage.getItem(STYLES_CACHE_KEY);
     if (cached && !forceRefresh) {
-      // Background refresh
-      this.fetchStylesFromDB().then(freshData => {
-        if (freshData && freshData.length > 0) {
-          localStorage.setItem(STYLES_CACHE_KEY, JSON.stringify(freshData));
-        }
-      }).catch(err => logger.error('Storage', 'Background styles refresh failed', err));
-      
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.length > 0) {
+        console.log('[Storage] getStyles: Returning cached styles');
+        // Background refresh
+        this.fetchStylesFromDB().then(freshData => {
+          if (freshData && freshData.length > 0) {
+            console.log('[Storage] getStyles: Background refresh updated cache');
+            localStorage.setItem(STYLES_CACHE_KEY, JSON.stringify(freshData));
+          }
+        }).catch(err => console.error('[Storage] getStyles: Background refresh failed', err));
+        
+        return parsed;
+      }
     }
     
+    console.log('[Storage] getStyles: Fetching fresh styles from DB...');
     const freshData = await this.fetchStylesFromDB();
     if (freshData && freshData.length > 0) {
+      console.log('[Storage] getStyles: Fresh styles saved to cache');
       localStorage.setItem(STYLES_CACHE_KEY, JSON.stringify(freshData));
+      return freshData;
     }
-    return freshData;
+    
+    console.warn('[Storage] getStyles: DB returned no styles. Falling back to SAMPLE_STYLES.');
+    return SAMPLE_STYLES;
   },
 
   async fetchStylesFromDB(): Promise<StyleTemplate[]> {
     try {
-      console.log('[Storage] Fetching styles from Supabase...');
+      console.log('[Storage] fetchStylesFromDB: Starting request to Supabase "styles" table...');
+      const startTime = Date.now();
+      
       const { data, error } = await supabase
         .from('styles')
         .select('*')
         .order('displayOrder', { ascending: true });
       
+      const duration = Date.now() - startTime;
+      console.log(`[Storage] fetchStylesFromDB: Request finished in ${duration}ms`);
+      
       if (error) {
+        console.error('[Storage] fetchStylesFromDB: Supabase error:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
         if (error.code === '42P01') {
-          console.error('[Storage] Table "styles" does not exist in Supabase. Please create it in your dashboard.');
-        } else {
-          console.error('[Storage] Supabase error fetching styles:', error);
+          console.error('[Storage] CRITICAL: Table "styles" does not exist in your Supabase database.');
         }
+        
         logger.error('Storage', 'Fetch styles error', error);
         throw error;
       }
-      console.log('[Storage] Styles fetched successfully:', data?.length || 0);
+      
+      console.log('[Storage] fetchStylesFromDB: Success. Rows returned:', data?.length || 0);
       return data || [];
     } catch (err) {
-      console.error('[Storage] Catch block error fetching styles:', err);
+      console.error('[Storage] fetchStylesFromDB: Unexpected exception:', err);
       logger.error('Storage', 'Failed to fetch styles from DB', err);
       return [];
     }

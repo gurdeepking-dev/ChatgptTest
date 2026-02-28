@@ -44,6 +44,8 @@ const UserView: React.FC<UserViewProps> = ({
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [freePhotoClaimed, setFreePhotoClaimed] = useState(false);
   const [settings, setSettings] = useState<any>(null);
+  const [visibleCount, setVisibleCount] = useState(6);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (lastPurchasedIds.length > 0) {
@@ -51,7 +53,9 @@ const UserView: React.FC<UserViewProps> = ({
         const next = { ...prev };
         lastPurchasedIds.forEach(id => {
           const styleId = id.split('-')[0];
-          if (next[styleId]) next[styleId].isHighRes = true;
+          if (next[styleId]) {
+            next[styleId] = { ...next[styleId], isHighRes: true };
+          }
         });
         return next;
       });
@@ -76,6 +80,7 @@ const UserView: React.FC<UserViewProps> = ({
         storageService.getAdminSettings()
       ]);
       
+      console.log('[UserView] loadedStyles:', loadedStyles.length);
       setStyles(loadedStyles);
       setSettings(adminSettings);
       
@@ -92,6 +97,23 @@ const UserView: React.FC<UserViewProps> = ({
       logger.error('View', 'Failed to load content', err);
     }
   };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < styles.length) {
+          setVisibleCount(prev => prev + 6);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [styles.length, visibleCount]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -214,7 +236,7 @@ const UserView: React.FC<UserViewProps> = ({
           <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Discover hundreds of artistic variations</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
-          {styles.map((s) => (
+          {styles.slice(0, visibleCount).map((s) => (
             <UserArtCard 
               key={s.id}
               style={s}
@@ -239,6 +261,12 @@ const UserView: React.FC<UserViewProps> = ({
             />
           ))}
         </div>
+
+        {visibleCount < styles.length && (
+          <div ref={loaderRef} className="py-10 flex justify-center">
+            <div className="w-8 h-8 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin"></div>
+          </div>
+        )}
       </section>
     </div>
   );
